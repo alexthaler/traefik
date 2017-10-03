@@ -1120,11 +1120,14 @@ func parseHealthCheckOptions(lb healthcheck.LoadBalancer, backend string, hc *ty
 		}
 	}
 
+	tlsConfig, _ := hc.TLS.CreateTLSConfig()
+
 	return &healthcheck.Options{
 		Path:     hc.Path,
 		Port:     hc.Port,
 		Interval: interval,
 		LB:       lb,
+		TLS:      tlsConfig,
 	}
 }
 

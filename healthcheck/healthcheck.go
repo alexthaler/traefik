@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"crypto/tls"
 	"github.com/containous/traefik/log"
 	"github.com/containous/traefik/safe"
 	"github.com/vulcand/oxy/roundrobin"
@@ -32,6 +33,7 @@ type Options struct {
 	Port     int
 	Interval time.Duration
 	LB       LoadBalancer
+	TLS      *tls.Config
 }
 
 func (opt Options) String() string {
@@ -145,9 +147,15 @@ func (backend *BackendHealthCheck) newRequest(serverURL *url.URL) (*http.Request
 }
 
 func checkHealth(serverURL *url.URL, backend *BackendHealthCheck) bool {
-	client := http.Client{
-		Timeout: backend.requestTimeout,
+	tr := &http.Transport{
+		TLSClientConfig: backend.Options.TLS,
 	}
+
+	client := http.Client{
+		Timeout:   backend.requestTimeout,
+		Transport: tr,
+	}
+
 	req, err := backend.newRequest(serverURL)
 	if err != nil {
 		log.Errorf("Failed to create HTTP request [%s] for healthcheck: %s", serverURL, err)
